@@ -1,0 +1,295 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with synchronization data and reading preferences",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "format": "email",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Public display name or reader handle",
+          "maxLength": 64
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Avatar image URL",
+          "maxLength": 512
+        },
+        "syncCode": {
+          "type": "string",
+          "description": "Unique pairing code for e-reader or cross-device cloud sync",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when profile was created",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when profile was last updated",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "email", "displayName", "createdAt"]
+    },
+    "LibraryItem": {
+      "title": "LibraryItem",
+      "description": "Bookmarked manga or manhwa entry in user reading library",
+      "type": "object",
+      "properties": {
+        "comicSlug": {
+          "type": "string",
+          "description": "Unique URL identifier for the manga",
+          "maxLength": 128
+        },
+        "comicTitle": {
+          "type": "string",
+          "description": "Title of the manga/manhwa",
+          "maxLength": 256
+        },
+        "coverUrl": {
+          "type": "string",
+          "description": "Cover art image URL",
+          "maxLength": 512
+        },
+        "category": {
+          "type": "string",
+          "description": "Library reading status category",
+          "enum": ["reading", "plan_to_read", "completed", "on_hold", "favorites"]
+        },
+        "lastReadChapter": {
+          "type": "string",
+          "description": "Chapter number last accessed",
+          "maxLength": 32
+        },
+        "progressPercent": {
+          "type": "number",
+          "description": "Reading completion percentage"
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "Timestamp when added to library",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when entry was updated",
+          "format": "date-time"
+        }
+      },
+      "required": ["comicSlug", "comicTitle", "category", "addedAt"]
+    },
+    "ReadingProgress": {
+      "title": "ReadingProgress",
+      "description": "Granular page-by-page progress record for a manga title",
+      "type": "object",
+      "properties": {
+        "comicSlug": {
+          "type": "string",
+          "description": "Slug of the manga",
+          "maxLength": 128
+        },
+        "comicTitle": {
+          "type": "string",
+          "description": "Title of the manga",
+          "maxLength": 256
+        },
+        "coverUrl": {
+          "type": "string",
+          "description": "Cover URL",
+          "maxLength": 512
+        },
+        "chapterHid": {
+          "type": "string",
+          "description": "Unique chapter hash ID",
+          "maxLength": 128
+        },
+        "chapterNumber": {
+          "type": "string",
+          "description": "Chapter number string",
+          "maxLength": 32
+        },
+        "chapterTitle": {
+          "type": "string",
+          "description": "Chapter subtitle or arc name",
+          "maxLength": 256
+        },
+        "currentPage": {
+          "type": "number",
+          "description": "Last read page number"
+        },
+        "totalPages": {
+          "type": "number",
+          "description": "Total pages in chapter"
+        },
+        "progressPercent": {
+          "type": "number",
+          "description": "Percentage progress"
+        },
+        "lastReadAt": {
+          "type": "string",
+          "description": "Timestamp of reading activity",
+          "format": "date-time"
+        }
+      },
+      "required": ["comicSlug", "chapterHid", "chapterNumber", "currentPage", "lastReadAt"]
+    },
+    "CommunityComment": {
+      "title": "CommunityComment",
+      "description": "Discussion forum comment for a manga or chapter",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique comment identifier",
+          "maxLength": 128
+        },
+        "comicSlug": {
+          "type": "string",
+          "description": "Associated manga slug",
+          "maxLength": 128
+        },
+        "chapterHid": {
+          "type": "string",
+          "description": "Optional associated chapter hash ID",
+          "maxLength": 128
+        },
+        "chapterTitle": {
+          "type": "string",
+          "description": "Title of chapter commented upon",
+          "maxLength": 256
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Author UID",
+          "maxLength": 128
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Display name of author",
+          "maxLength": 64
+        },
+        "authorAvatar": {
+          "type": "string",
+          "description": "Avatar URL of author",
+          "maxLength": 512
+        },
+        "content": {
+          "type": "string",
+          "description": "Body text of discussion comment",
+          "maxLength": 2000
+        },
+        "rating": {
+          "type": "number",
+          "description": "User rating score (1-5)"
+        },
+        "isSpoiler": {
+          "type": "boolean",
+          "description": "Whether content contains plot spoilers"
+        },
+        "upvotes": {
+          "type": "number",
+          "description": "Community upvote count"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when comment was posted",
+          "format": "date-time"
+        }
+      },
+      "required": ["comicSlug", "authorId", "authorName", "content", "createdAt"]
+    },
+    "FeedbackTicket": {
+      "title": "FeedbackTicket",
+      "description": "User support query or feedback ticket sent to monitored engineering email",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ticket ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Optional UID of user",
+          "maxLength": 128
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Sender name or handle",
+          "maxLength": 64
+        },
+        "senderEmail": {
+          "type": "string",
+          "description": "Sender contact email",
+          "maxLength": 256
+        },
+        "category": {
+          "type": "string",
+          "description": "Query category",
+          "maxLength": 64
+        },
+        "message": {
+          "type": "string",
+          "description": "Feedback message text",
+          "maxLength": 4000
+        },
+        "status": {
+          "type": "string",
+          "description": "Resolution status",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Submission timestamp",
+          "format": "date-time"
+        }
+      },
+      "required": ["message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores private user account preferences, sync codes, and settings"
+    },
+    "/users/{userId}/library/{comicSlug}": {
+      "schema": {
+        "$ref": "#/entities/LibraryItem"
+      },
+      "description": "Subcollection of manga bookmarks and reading lists per user"
+    },
+    "/users/{userId}/progress/{comicSlug}": {
+      "schema": {
+        "$ref": "#/entities/ReadingProgress"
+      },
+      "description": "Subcollection storing real-time reading progress and last read chapter per comic"
+    },
+    "/comments/{commentId}": {
+      "schema": {
+        "$ref": "#/entities/CommunityComment"
+      },
+      "description": "Public community discussion forum comments for manga titles"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": {
+        "$ref": "#/entities/FeedbackTicket"
+      },
+      "description": "User feedback tickets monitored for admin support queries"
+    }
+  }
+}

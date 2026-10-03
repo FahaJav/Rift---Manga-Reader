@@ -1,0 +1,6 @@
+{
+  "name": "KuroManga — Ultimate Cross-Platform Manga & Manhwa Reader",
+  "description": "Next-gen cross-platform manga & manhwa reader featuring real-time reading progress, offline chapter downloads, Cloudflare DDoS mitigation, Google authentication, e-reader sync, community discussions, and gamified reading analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

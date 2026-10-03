@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net Default-Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['userId', 'email', 'displayName', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'email', 'displayName', 'photoURL', 'syncCode', 'createdAt', 'updatedAt']) &&
+        data.userId == request.auth.uid &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.email is string && data.email.size() <= 256 &&
+        data.displayName is string && data.displayName.size() <= 64 &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512)) &&
+        (!('syncCode' in data) || (data.syncCode is string && data.syncCode.size() <= 32));
+    }
+
+    function isValidLibraryItem(data) {
+      return data.keys().hasAll(['comicSlug', 'comicTitle', 'category', 'addedAt']) &&
+        data.keys().hasOnly(['comicSlug', 'comicTitle', 'coverUrl', 'category', 'lastReadChapter', 'progressPercent', 'addedAt', 'updatedAt']) &&
+        data.comicSlug is string && data.comicSlug.size() <= 128 &&
+        data.comicTitle is string && data.comicTitle.size() <= 256 &&
+        data.category in ['reading', 'plan_to_read', 'completed', 'on_hold', 'favorites'] &&
+        (!('coverUrl' in data) || (data.coverUrl is string && data.coverUrl.size() <= 512)) &&
+        (!('lastReadChapter' in data) || (data.lastReadChapter is string && data.lastReadChapter.size() <= 32)) &&
+        (!('progressPercent' in data) || (data.progressPercent is number));
+    }
+
+    function isValidReadingProgress(data) {
+      return data.keys().hasAll(['comicSlug', 'chapterHid', 'chapterNumber', 'currentPage', 'lastReadAt']) &&
+        data.keys().hasOnly(['comicSlug', 'comicTitle', 'coverUrl', 'chapterHid', 'chapterNumber', 'chapterTitle', 'currentPage', 'totalPages', 'progressPercent', 'lastReadAt']) &&
+        data.comicSlug is string && data.comicSlug.size() <= 128 &&
+        data.chapterHid is string && data.chapterHid.size() <= 128 &&
+        data.chapterNumber is string && data.chapterNumber.size() <= 32 &&
+        data.currentPage is number &&
+        (!('comicTitle' in data) || (data.comicTitle is string && data.comicTitle.size() <= 256)) &&
+        (!('coverUrl' in data) || (data.coverUrl is string && data.coverUrl.size() <= 512)) &&
+        (!('chapterTitle' in data) || (data.chapterTitle is string && data.chapterTitle.size() <= 256)) &&
+        (!('totalPages' in data) || (data.totalPages is number)) &&
+        (!('progressPercent' in data) || (data.progressPercent is number));
+    }
+
+    function isValidCommunityComment(data) {
+      return data.keys().hasAll(['comicSlug', 'authorId', 'authorName', 'content', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'comicSlug', 'chapterHid', 'chapterTitle', 'authorId', 'authorName', 'authorAvatar', 'content', 'rating', 'isSpoiler', 'upvotes', 'createdAt']) &&
+        data.authorId == request.auth.uid &&
+        data.comicSlug is string && data.comicSlug.size() <= 128 &&
+        data.authorName is string && data.authorName.size() <= 64 &&
+        data.content is string && data.content.size() <= 2000 &&
+        (!('chapterHid' in data) || (data.chapterHid is string && data.chapterHid.size() <= 128)) &&
+        (!('chapterTitle' in data) || (data.chapterTitle is string && data.chapterTitle.size() <= 256)) &&
+        (!('authorAvatar' in data) || (data.authorAvatar is string && data.authorAvatar.size() <= 512)) &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 1 && data.rating <= 5)) &&
+        (!('isSpoiler' in data) || (data.isSpoiler is bool)) &&
+        (!('upvotes' in data) || (data.upvotes is number));
+    }
+
+    function isValidFeedbackTicket(data) {
+      return data.keys().hasAll(['message', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'senderName', 'senderEmail', 'category', 'message', 'status', 'createdAt']) &&
+        data.message is string && data.message.size() <= 4000 &&
+        (!('userId' in data) || (data.userId is string && data.userId.size() <= 128)) &&
+        (!('senderName' in data) || (data.senderName is string && data.senderName.size() <= 64)) &&
+        (!('senderEmail' in data) || (data.senderEmail is string && data.senderEmail.size() <= 256)) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 64)) &&
+        (!('status' in data) || (data.status is string && data.status.size() <= 32));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidUserProfile(incoming());
+      allow delete: if false;
+
+      match /library/{comicSlug} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(comicSlug) && isValidLibraryItem(incoming());
+        allow update: if isOwner(userId) && isValidLibraryItem(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /progress/{comicSlug} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(comicSlug) && isValidReadingProgress(incoming());
+        allow update: if isOwner(userId) && isValidReadingProgress(incoming());
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    match /comments/{commentId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(commentId) && isValidCommunityComment(incoming());
+      allow update: if isSignedIn() && (
+        (existing().authorId == request.auth.uid && isValidCommunityComment(incoming())) ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['upvotes'])
+      );
+      allow delete: if isSignedIn() && existing().authorId == request.auth.uid;
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if isValidId(feedbackId) && isValidFeedbackTicket(incoming());
+      allow read, update, delete: if false;
+    }
+  }
+}
